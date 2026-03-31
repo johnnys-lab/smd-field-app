@@ -16,7 +16,7 @@ const LIFF_ID = '2009342488-tOiCe4vR';
 // ════════════════════════════════
 // Telegram Notification Config
 // ════════════════════════════════
-const TG_BOT_TOKEN = '8643336165:AAH8iIYPim76amYKKvmHn-EH7vaJGq7Qv4A';
+const TG_BOT_TOKEN = '8735025855:AAF2rAzo_sTGsHjkgK-aWMnX52CqODxuu3I';
 const TG_CHAT_ID   = '-5156371757';
 let currentLang = 'en';
 function T(k) { return (LANG[currentLang]||LANG['en'])[k] || k; }
