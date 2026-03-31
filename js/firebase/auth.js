@@ -164,11 +164,23 @@ function doLineLogin() {
 }
 
 // Init: try LIFF
+// Wait for Firebase anonymous auth before checking role
+function initAfterAuth(profile) {
+  if (auth && auth.currentUser === null) {
+    // Auth not ready yet — wait for state change
+    auth.onAuthStateChanged(user => {
+      if (user) checkUserRole(profile);
+    });
+  } else {
+    checkUserRole(profile);
+  }
+}
+
 if (typeof liff !== 'undefined' && LIFF_ID !== 'YOUR_LIFF_ID') {
   liff.init({ liffId: LIFF_ID })
     .then(() => {
       if (liff.isLoggedIn()) {
-        liff.getProfile().then(profile => checkUserRole(profile));
+        liff.getProfile().then(profile => initAfterAuth(profile));
       } else {
         // Not logged in — show login screen
         // (login screen is already visible by default)
