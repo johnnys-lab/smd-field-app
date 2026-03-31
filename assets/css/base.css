@@ -1,0 +1,58 @@
+/* SMD BKK Job Tracker — Base Styles */
+:root{--bg:#0d0f14;--surface:#141720;--surface2:#1c2130;--border:#252b3b;--accent:#3d8ef0;--accent2:#f0a83d;--green:#3dbe7a;--red:#e05555;--yellow:#f0c93d;--text:#e2e8f4;--muted:#6b7594;--radius:10px;--purple:#9b6ef0;--teal:#3dd6be}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px 14px 80px}
+  header{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+  .logo{width:42px;height:42px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;color:#fff;flex-shrink:0}
+  h1{font-size:19px;font-weight:600;letter-spacing:-.3px}
+  h1 span{color:var(--muted);font-weight:400;font-size:12px;display:block}
+  
+  .top-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .btn-toggle { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; font-family: inherit; }
+  .btn-toggle.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── Issues Module ─────────────────────────── */
+  .issue-list { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .issue-item { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; position:relative; border-left:3px solid var(--border); }
+  .issue-item.pri-critical { border-left-color:#e05555; }
+  .issue-item.pri-high     { border-left-color:#f0a83d; }
+  .issue-item.pri-medium   { border-left-color:#f0c93d; }
+  .issue-item.pri-low      { border-left-color:#3dbe7a; }
+  .issue-item.resolved     { opacity:.6; }
+  .issue-top { display:flex; align-items:flex-start; gap:8px; margin-bottom:6px; }
+  .issue-title { font-size:12px; font-weight:600; flex:1; line-height:1.4; }
+  .issue-badges { display:flex; gap:5px; flex-shrink:0; }
+  .pri-badge { font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px; font-family:'IBM Plex Mono',monospace; }
+  .pri-badge.critical { background:rgba(224,85,85,.18); color:#e05555; }
+  .pri-badge.high     { background:rgba(240,168,61,.18); color:#f0a83d; }
+  .pri-badge.medium   { background:rgba(240,201,61,.18); color:#f0c93d; }
+  .pri-badge.low      { background:rgba(61,190,122,.18); color:#3dbe7a; }
+  .iss-status-badge { font-size:9px; font-weight:700; padding:2px 6px; border-radius:10px; font-family:'IBM Plex Mono',monospace; }
+  .iss-status-badge.open        { background:rgba(224,85,85,.12); color:#e05555; }
+  .iss-status-badge.in-progress { background:rgba(61,142,240,.12); color:#3d8ef0; }
+  .iss-status-badge.resolved    { background:rgba(61,190,122,.12); color:#3dbe7a; }
+  .issue-actions { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
+  .iss-btn { font-size:10px; padding:3px 9px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; font-family:inherit; transition:.15s; }
+  .iss-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .iss-btn.resolve { border-color:var(--green); color:var(--green); }
+  .iss-btn.resolve:hover { background:var(--green); color:#0d0f14; }
+  .iss-btn.del { border-color:var(--red); color:var(--red); }
+  .iss-btn.del:hover { background:var(--red); color:#fff; }
+  .iss-resolve-note { margin-top:6px; font-size:11px; color:var(--green); background:rgba(61,190,122,.07); border-radius:6px; padding:5px 8px; }
+  .iss-desc { font-size:11px; color:var(--muted); margin-top:3px; line-height:1.4; }
+  /* Add issue form */
+  .add-issue-form { background:var(--bg); border:1px solid var(--accent); border-radius:8px; padding:12px; margin-bottom:10px; display:none; }
+  .add-issue-form.open { display:block; }
+  .iss-form-row { display:flex; gap:8px; margin-bottom:8px; }
+  .iss-form-row select, .iss-form-row input, .add-issue-form input, .add-issue-form textarea {
+    background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--text); padding:6px 9px; font-size:11px; font-family:inherit; outline:none; width:100%;
+  }
+  .iss-form-row select:focus, .iss-form-row input:focus, .add-issue-form textarea:focus { border-color:var(--accent); }
+  .add-issue-form textarea { resize:none; height:52px; margin-bottom:8px; }
+  .iss-form-btns { display:flex; gap:6px; }
+
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(224, 85, 85, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(224, 85, 85, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(224, 85, 85, 0); }
+  }

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMD BKK Job Tracker</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d0f14">
+<link rel="apple-touch-icon" href="/assets/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<!-- LINE LIFF SDK -->
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<!-- Chart.js (for dashboard) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">SMD</div>
+    <div class="login-title">SMD BKK Job Tracker</div>
+    <div class="login-sub">Sign in with LINE to continue</div>
+    <button class="btn-line-login" onclick="doLineLogin()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+      Login with LINE
+    </button>
+    <div class="login-note">Access is restricted to registered team members</div>
+  </div>
+</div>
+
+<!-- Viewer banner -->
+<div class="viewer-banner">👁 View Only — You do not have permission to edit</div>
+
+<header>
+  <div class="logo">SMD</div>
+  <div style="flex:1">
+    <h1>SMD BKK Job Tracker</h1>
+    <h1><span>March 2026 — ESP & Electrical Inspections</span></h1>
+    <div style="font-size:11px;color:var(--muted);margin-top:3px">Hello, <span id="user-name" style="color:var(--accent2)">...</span><span id="role-badge" class="role-badge" style="display:none"></span><button id="refresh-role-btn" onclick="refreshRole()" title="Refresh role" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:0 0 0 6px;font-family:inherit;vertical-align:middle">🔄</button></div>
+  </div>
+  <button id="lang-btn" onclick="toggleLang()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;flex-shrink:0;font-family:inherit">🇬🇧 EN</button>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="num" id="s-all" style="color:var(--text)">0</div><div class="label">Total Jobs</div></div>
+  <div class="stat"><div class="num" id="s-done" style="color:var(--green)">0</div><div class="label">Completed</div></div>
+  <div class="stat"><div class="num" id="s-dwr" style="color:var(--accent)">0</div><div class="label">DWR Sent</div></div>
+  <div class="stat" id="stat-issue-box"><div class="num" id="s-issues" style="color:var(--yellow)">0</div><div class="label">Open Issues</div></div>
+  <div class="stat" id="stat-delay-box"><div class="num" id="s-delayed" style="color:var(--red)">0</div><div class="label">Delay</div></div>
+</div>
+
+<div class="top-tools">
+  <div class="filter-bar" style="margin-bottom:0;">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('ongoing',this)">Active</button>
+    <button class="filter-btn" onclick="setFilter('done',this)">Completed</button>
+  </div>
+  <button class="btn-toggle" id="compact-btn" onclick="toggleCompact()">🗜️ Compact View</button>
+  <button class="btn-toggle" onclick="openDashboard()">📊 Dashboard</button>
+  <button class="btn-admin" id="admin-btn" onclick="openAdminPanel()" style="display:none">👑 Users</button>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="search-input" class="search-input" placeholder="🔍 Search job, engineer, type..." oninput="render()">
+  <button class="btn-export" onclick="exportToCSV()">📊 CSV</button>
+</div>
+
+<div class="jobs" id="job-list"></div>
+<button class="fab" onclick="openModal()">+</button>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title"><span>+ Add New Job</span><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="field"><label>Job Title *</label><input id="f-title" type="text" placeholder="e.g. ABC Co. – ESP Inspection"></div>
+    <div class="field"><label>Service Type</label>
+      <select id="f-type">
+        <option>ESP Inspection</option><option>ESP Inspection + Troubleshooting</option>
+        <option>ESP Inspection + Maintenance</option><option>Maintenance</option>
+        <option>TR Repair</option><option>FAT</option>
+        <option>Supervision</option><option>Quality Check</option><option>Other</option>
+      </select></div>
+    <div style="display:flex;gap:8px">
+      <div class="field" style="flex:1"><label>Start Date</label><input id="f-date" type="date"></div>
+      <div class="field" style="flex:1"><label>End Date</label><input id="f-enddate" type="date"></div>
+    </div>
+    <div class="field"><label>Engineers (select multiple)</label>
+      <div id="eng-picker" style="display:flex;flex-wrap:wrap;gap:7px;padding:4px 0"></div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px">Selected: <span id="eng-selected-label" style="color:var(--accent2)">None selected</span></div>
+    </div>
+    <button class="btn-submit" onclick="submitJob()">✓ Save Job</button>
+  </div>
+</div>
+
+<!-- Admin Panel Modal -->
+<div class="modal-overlay" id="admin-modal" onclick="if(event.target===this)closeAdminPanel()">
+  <div class="modal">
+    <div class="modal-title"><span>👑 User Management</span><button class="modal-close" onclick="closeAdminPanel()">×</button></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:14px">Manage team access roles. Changes apply immediately.</div>
+    <div id="admin-user-list"><div style="text-align:center;padding:20px;color:var(--muted)">Loading...</div></div>
+    <div class="divider"></div>
+    <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px">Add New User</div>
+    <div class="field"><label>LINE User ID</label><input id="admin-new-uid" type="text" placeholder="U1234abcd... (from LINE)"></div>
+    <div class="field"><label>Name</label><input id="admin-new-name" type="text" placeholder="Full name"></div>
+    <div class="field"><label>Nickname</label><input id="admin-new-nick" type="text" placeholder="Nickname"></div>
+    <div class="field"><label>Role</label>
+      <select id="admin-new-role" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:inherit;font-size:13px;padding:9px 10px;outline:none">
+        <option value="engineer">Engineer</option>
+        <option value="viewer">Viewer</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <button class="btn-submit" onclick="adminAddUser()">+ Add User</button>
+  </div>
+</div>
+
+<div class="dash-overlay" id="dash-overlay" onclick="if(event.target===this)closeDashboard()">
+  <div class="dash-box">
+    <div class="dash-header">
+      <h2>📊 Dashboard</h2>
+      <button class="dash-close" onclick="closeDashboard()">×</button>
+    </div>
+    <div class="dash-body" id="dash-body">
+      <div class="dash-empty">Loading...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for photo upload -->
+<input type="file" id="photo-file-input" accept="image/*" multiple style="display:none" onchange="handlePhotoFiles(event)">
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">×</span>
+  <img id="lb-img" src="" alt="">
+  <div class="lightbox-caption" id="lb-caption"></div>
+  <div class="lightbox-nav">
+    <button onclick="lbNav(-1)">◀</button>
+    <button onclick="lbNav(1)">▶</button>
+  </div>
+</div>
+
+<!-- App Modules (order matters) -->
+<script src="js/config.js"></script>
+<script src="js/firebase/init.js"></script>
+<script src="js/firebase/auth.js"></script>
+<script src="js/services/jobs.service.js"></script>
+<script src="js/modules/issues.module.js"></script>
+<script src="js/services/photos.service.js"></script>
+<script src="js/modules/dashboard.module.js"></script>
+<script src="js/modules/admin.module.js"></script>
+<script src="js/modules/render.js"></script>
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(e => console.warn('SW failed:', e));
+  });
+}
+</script>
+</body>
+</html>
