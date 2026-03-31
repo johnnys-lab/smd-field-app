@@ -106,19 +106,29 @@ function notifyLogin(user, isNewUser) {
 }
 
 function checkUserRole(profile) {
-  if (!db) { 
-    // fallback: no firebase — allow as viewer
-    setCurrentUser(profile, null);
-    notifyLogin({ name: profile.displayName, nick: '', role: 'viewer' }, false);
-    showApp();
+  // Wait for db to be ready (max 5s) before fetching role
+  if (!db) {
+    let waited = 0;
+    const poll = setInterval(() => {
+      waited += 200;
+      if (db) {
+        clearInterval(poll);
+        checkUserRole(profile);
+      } else if (waited >= 5000) {
+        clearInterval(poll);
+        console.warn('[Auth] db not ready after 5s — falling back to viewer');
+        setCurrentUser(profile, null);
+        showApp();
+      }
+    }, 200);
     return;
   }
   db.ref('users/' + profile.userId).once('value').then(snap => {
     const dbUser = snap.val();
-    const isNewUser = !dbUser;
+    const isNewUser = !dbUser || !dbUser.role;
     setCurrentUser(profile, dbUser);
-    if (isNewUser) {
-      // First time: register as pending
+    if (isNewUser && !dbUser) {
+      // First time only — do NOT overwrite if user exists but role is missing
       db.ref('users/' + profile.userId).set({
         name: profile.displayName,
         nick: '',
@@ -128,7 +138,7 @@ function checkUserRole(profile) {
       });
       notifyLogin({ name: profile.displayName, nick: '', role: 'pending' }, true);
     } else {
-      notifyLogin(dbUser, false);
+      notifyLogin(dbUser || {name: profile.displayName, role: 'viewer'}, false);
     }
     showApp();
   }).catch(() => {
