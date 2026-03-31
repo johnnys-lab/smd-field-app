@@ -84,3 +84,74 @@ function openAdminPanel() {
   document.getElementById('admin-modal').classList.add('open');
   loadAdminUsers();
 }
+
+function closeAdminPanel() {
+  document.getElementById('admin-modal').classList.remove('open');
+}
+
+function loadAdminUsers() {
+  const list = document.getElementById('admin-user-list');
+  if (!db) { list.innerHTML = '<div style="color:var(--muted);font-size:12px">Firebase not connected</div>'; return; }
+  db.ref('users').once('value').then(snap => {
+    const users = snap.val() || {};
+    const keys = Object.keys(users);
+    if (!keys.length) { list.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">No users registered yet</div>'; return; }
+    list.innerHTML = keys.map(uid => {
+      const u = users[uid];
+      const roleClass = ROLE_CLASSES[u.role] || 'role-pending';
+      return `<div class="admin-user-row">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">
+          ${u.role==='admin'?'👑':u.role==='engineer'?'🔧':'👁'}
+        </div>
+        <div class="admin-user-info">
+          <div class="admin-user-name">${u.name||'—'} <span style="color:var(--accent2);font-size:11px">${u.nick?'('+u.nick+')':''}</span></div>
+          <div class="admin-user-id">${uid}</div>
+        </div>
+        <select class="admin-role-select" onchange="adminSetRole('${uid}',this.value)">
+          <option value="admin"   ${u.role==='admin'   ?'selected':''}>Admin</option>
+          <option value="engineer"${u.role==='engineer'?'selected':''}>Engineer</option>
+          <option value="viewer"  ${u.role==='viewer'  ?'selected':''}>Viewer</option>
+          <option value="pending" ${u.role==='pending' ?'selected':''}>Pending</option>
+        </select>
+        <button onclick="adminRemoveUser('${uid}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px" title="Remove">×</button>
+      </div>`;
+    }).join('');
+  });
+}
+
+function adminSetRole(uid, role) {
+  if (!canAdmin() || !db) return;
+  db.ref('users/' + uid + '/role').set(role).then(() => {
+    // if changing own role, update currentUser
+    if (uid === currentUser.lineUserId) {
+      currentUser.role = role;
+      applyRoleUI();
+    }
+  });
+}
+
+function adminRemoveUser(uid) {
+  if (!canAdmin()) return;
+  if (!confirm('Remove this user?')) return;
+  if (db) db.ref('users/' + uid).remove().then(() => loadAdminUsers());
+}
+
+function adminAddUser() {
+  if (!canAdmin()) return;
+  const uid  = document.getElementById('admin-new-uid').value.trim();
+  const name = document.getElementById('admin-new-name').value.trim();
+  const nick = document.getElementById('admin-new-nick').value.trim();
+  const role = document.getElementById('admin-new-role').value;
+  if (!uid || !name) return alert('LINE User ID and Name are required');
+  if (!db) return alert('Firebase not connected');
+  db.ref('users/' + uid).set({ name, nick, role, lineUserId: uid, addedAt: new Date().toISOString() })
+    .then(() => {
+      document.getElementById('admin-new-uid').value = '';
+      document.getElementById('admin-new-name').value = '';
+      document.getElementById('admin-new-nick').value = '';
+      loadAdminUsers();
+    });
+}
+
+
+load();

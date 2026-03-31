@@ -70,6 +70,7 @@ function setCurrentUser(profile, dbUser) {
 // Telegram Notification
 // ────────────────────────────────
 function sendTelegram(message) {
+  if (!TG_BOT_TOKEN || TG_BOT_TOKEN === 'YOUR_BOT_TOKEN') return;
   if (!TG_BOT_TOKEN || !TG_CHAT_ID) return;
   fetch('https://api.telegram.org/bot' + TG_BOT_TOKEN + '/sendMessage', {
     method: 'POST',
